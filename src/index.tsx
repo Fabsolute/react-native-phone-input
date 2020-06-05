@@ -20,8 +20,8 @@ import {CountryModel} from './types';
 
 
 type Props = {
-    initialCountry: string;
-    disabled: boolean;
+    initialCountry?: string;
+    disabled?: boolean;
     style?: StyleProp<ViewStyle>;
     flagStyle?: StyleProp<ImageStyle>;
     textStyle?: StyleProp<TextStyle>
