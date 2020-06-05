@@ -3,6 +3,12 @@
   "version": "0.2.5",
   "description": "Phone input box for React Native",
   "main": "src/index.tsx",
+  "react-native": "src/index.tsx",
+  "module": "src/index.tsx",
+  "types": "src/index.tsx",
+  "files": [
+    "src"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
