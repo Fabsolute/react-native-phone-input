@@ -31,8 +31,7 @@
   ],
   "dependencies": {
     "google-libphonenumber": "^3.2.2",
-    "lodash": "^4.17.4",
-    "@react-native-community/picker": "^1.6.1"
+    "lodash": "^4.17.4"
   },
   "devDependencies": {
     "@types/react": "^16.8.13",
@@ -43,7 +42,8 @@
   },
   "peerDependencies": {
     "react-native": ">= 0.62.0",
-    "react": ">= 16.11.0"
+    "react": ">= 16.11.0",
+    "@react-native-community/picker": "^1.6.1"
   },
   "author": "Fabsolute (https://github.com/fabsolute)",
   "license": "MIT",
