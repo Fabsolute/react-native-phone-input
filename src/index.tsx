@@ -39,6 +39,7 @@ type Props = {
     onSelectCountry?: (country: string) => void;
     allowZeroAfterCountryCode?: boolean;
     value?: string;
+    autoFormat?: boolean;
 };
 
 export type PickerData = {
@@ -69,7 +70,6 @@ export const PhoneInput = memo(forwardRef<PhoneInputRefProps, Props>(
 
         const [iso2, setISO2] = useState(props.initialCountry);
         const [formattedNumber, setFormattedNumber] = useState(countryData ? `+${countryData.dialCode}` : '');
-        const [inputValue, setInputValue] = useState('');
 
         const getISOCode = useCallback(() => iso2, [iso2]);
         const getCountryCode = useCallback(() => {
@@ -78,7 +78,7 @@ export const PhoneInput = memo(forwardRef<PhoneInputRefProps, Props>(
         }, [iso2]);
         const focus = () => inputPhone.current.focus();
         const blur = () => inputPhone.current.blur();
-        const getPickerData = ()=> PhoneNumber.getAllCountries().map((country: CountryModel, index: number) => ({
+        const getPickerData = () => PhoneNumber.getAllCountries().map((country: CountryModel, index: number) => ({
             key: index,
             image: FlagLookup[country.iso2],
             label: country.name,
@@ -90,13 +90,7 @@ export const PhoneInput = memo(forwardRef<PhoneInputRefProps, Props>(
         const getDialCode = () => PhoneNumber.getDialCode(formattedNumber);
         const getValue = () => formattedNumber.replace(/\s/g, '');
         const getNumberType = () => PhoneNumber.getNumberType(formattedNumber, iso2);
-        const isValidNumber = () => {
-            if (inputValue.length < 3) {
-                return false;
-            }
-
-            return PhoneNumber.isValidNumber(formattedNumber, iso2);
-        };
+        const isValidNumber = () => PhoneNumber.isValidNumber(formattedNumber, iso2);
 
         useImperativeHandle(ref, () => ({
             focus, blur,
@@ -104,6 +98,12 @@ export const PhoneInput = memo(forwardRef<PhoneInputRefProps, Props>(
             getAllCountries, getFlag, getDialCode,
             getValue, getNumberType, isValidNumber,
         }));
+
+        const format = useCallback((text: string) => {
+            return props.autoFormat
+                ? PhoneNumber.format(text, iso2)
+                : text;
+        }, [props.autoFormat, iso2]);
 
         const onPressFlag = useCallback(() => {
             if (props.onPressFlag) {
@@ -125,24 +125,19 @@ export const PhoneInput = memo(forwardRef<PhoneInputRefProps, Props>(
         }, []);
 
         const updateFlagAndFormatNumber = useCallback((number: string) => {
-            let iso2 = getISOCode() || props.initialCountry;
-            let formattedPhoneNumber = number;
+            let iso2 = props.initialCountry;
+            let phoneNumber = number;
+
             if (number) {
-                const countryCode = getCountryCode();
-                if (formattedPhoneNumber[0] !== '+' && countryCode !== null) {
-                    formattedPhoneNumber = '+' + countryCode.toString() + formattedPhoneNumber.toString();
-                }
-                formattedPhoneNumber = props.allowZeroAfterCountryCode
-                    ? formattedPhoneNumber
-                    : possiblyEliminateZeroAfterCountryCode(formattedPhoneNumber);
-                iso2 = PhoneNumber.getCountryCodeOfNumber(formattedPhoneNumber);
+                if (phoneNumber[0] !== '+') phoneNumber = `+${phoneNumber}`;
+                phoneNumber = props.allowZeroAfterCountryCode
+                    ? phoneNumber
+                    : possiblyEliminateZeroAfterCountryCode(phoneNumber);
+                iso2 = PhoneNumber.getCountryCodeOfNumber(phoneNumber);
             }
-
             setISO2(iso2);
-            setFormattedNumber(formattedPhoneNumber);
-            setInputValue(number);
-        }, [getISOCode, getCountryCode, props.allowZeroAfterCountryCode, props.initialCountry, possiblyEliminateZeroAfterCountryCode]);
-
+            setFormattedNumber(format(phoneNumber));
+        }, [getISOCode, getCountryCode, props.allowZeroAfterCountryCode, props.initialCountry, possiblyEliminateZeroAfterCountryCode, format]);
 
         const onChangePhoneNumber = useCallback((number: string) => {
             updateFlagAndFormatNumber(number);
@@ -159,16 +154,15 @@ export const PhoneInput = memo(forwardRef<PhoneInputRefProps, Props>(
                     setISO2(newISO2);
                     setFormattedNumber(`+${countryData.dialCode}`);
 
-                    updateFlagAndFormatNumber(inputValue);
                     if (props.onSelectCountry) {
                         props.onSelectCountry(newISO2);
                     }
                 }
             }
-        }, [updateFlagAndFormatNumber, iso2, props.onSelectCountry, inputValue]);
+        }, [updateFlagAndFormatNumber, iso2, props.onSelectCountry]);
 
         useEffect(() => {
-            if (inputValue === props.value || props.value == null) {
+            if (props.value == null) {
                 return;
             }
 
@@ -189,7 +183,7 @@ export const PhoneInput = memo(forwardRef<PhoneInputRefProps, Props>(
                         onChangeText={onChangePhoneNumber}
                         keyboardType="phone-pad"
                         underlineColorAndroid="rgba(0,0,0,0)"
-                        value={inputValue}
+                        value={formattedNumber}
                         {...props.textProps}
                     />
                 </View>
